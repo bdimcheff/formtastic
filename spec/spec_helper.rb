@@ -84,6 +84,7 @@ module FormtasticSpecHelper
     def persisted?
     end
   end
+  class ::PostSubclass < ::Post; end
   module ::Namespaced
     class Post
       extend ActiveModel::Naming if defined?(ActiveModel::Naming)
@@ -120,6 +121,7 @@ module FormtasticSpecHelper
 
     def post_path(o); "/posts/1"; end
     def posts_path; "/posts"; end
+    def post_subclasses_path; "/post_subclasses"; end
     def new_post_path; "/posts/new"; end
 
     def author_path(o); "/authors/1"; end

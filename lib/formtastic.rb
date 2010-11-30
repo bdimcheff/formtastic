@@ -1772,25 +1772,33 @@ module Formtastic #:nodoc:
           use_i18n = value.nil? ? self.class.i18n_lookups_by_default : (value != false)
 
           if use_i18n
-            model_name, nested_model_name  = normalize_model_name(self.model_name.underscore)
             action_name = template.params[:action].to_s rescue ''
             attribute_name = key.to_s
+            
+            model_name, nested_model_name  = normalize_model_name(self.model_name.underscore)
+            
+            defaults = []
+            
+            ::Formtastic::I18n::SCOPES.each do |i18n_scope|
+              ancestor_names.each do |model_name|
+                model_name, nested_model_name  = normalize_model_name(model_name.underscore)
+                
+                next if !nested_model_name && i18n_scope.match(/nested_model/)
 
-            defaults = ::Formtastic::I18n::SCOPES.reject do |i18n_scope|
-              nested_model_name.nil? && i18n_scope.match(/nested_model/)
-            end.collect do |i18n_scope|
-              i18n_path = i18n_scope.dup
-              i18n_path.gsub!('%{action}', action_name)
-              i18n_path.gsub!('%{model}', model_name)
-              i18n_path.gsub!('%{nested_model}', nested_model_name) unless nested_model_name.nil?
-              i18n_path.gsub!('%{attribute}', attribute_name)
-              i18n_path.gsub!('..', '.')
-              i18n_path.to_sym
+                i18n_path = i18n_scope.dup
+                i18n_path.gsub!('%{action}', action_name)
+                i18n_path.gsub!('%{model}', model_name.underscore)
+                i18n_path.gsub!('%{nested_model}', nested_model_name) if nested_model_name
+                i18n_path.gsub!('%{attribute}', attribute_name)
+                i18n_path.gsub!('..', '.')
+                defaults << i18n_path.to_sym
+              end
             end
+            
             defaults << ''
 
             defaults.uniq!
-
+                        
             default_key = defaults.shift
             i18n_value = ::Formtastic::I18n.t(default_key,
               options.merge(:default => defaults, :scope => type.to_s.pluralize.to_sym))
@@ -1805,9 +1813,18 @@ module Formtastic #:nodoc:
           end
         end
       end
-
+      
       def model_name
         @object.present? ? @object.class.name : @object_name.to_s.classify
+      end
+
+      
+      def ancestor_names
+        if @object.present?
+          @object.class.ancestors.map(&:name)
+        else
+          [@object_name.to_s.classify]
+        end
       end
 
       def normalize_model_name(name)

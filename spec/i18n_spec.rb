@@ -155,6 +155,17 @@ describe 'Formtastic::I18n' do
       output_buffer.concat(form) if Formtastic::Util.rails3?
       output_buffer.should have_tag("form label", /Written by/)
     end
+    
+    it 'should load translations from superclasses' do
+      @new_post.stub!(:class).and_return(::PostSubclass)
+      @new_post.class.ancestors.should include(::Post)
+      @new_post.class.ancestors.should include(::PostSubclass)
+      form = semantic_form_for(@new_post) do |builder|
+        concat(builder.input(:title))
+      end
+      output_buffer.concat(form) if Formtastic::Util.rails3?
+      output_buffer.should have_tag("form label", /Hello post!/)
+    end
 
     # TODO: Add spec for namespaced models?
 
