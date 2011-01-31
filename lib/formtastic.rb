@@ -1617,7 +1617,7 @@ module Formtastic #:nodoc:
       #
       def generate_association_input_name(method) #:nodoc:
         if reflection = reflection_for(method)
-          if [:has_and_belongs_to_many, :has_many].include?(reflection.macro)
+          if [:has_and_belongs_to_many, :has_many, :references_and_referenced_in_many].include?(reflection.macro)
             "#{method.to_s.singularize}_ids"
           else
             reflection.options[:foreign_key] || "#{method}_id"
